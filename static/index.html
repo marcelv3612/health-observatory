@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A private, local sleep dashboard for Apple Health exports.">
+  <title>Sleep Studio · Porcelain</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+  <script type="module" src="/ceramic.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#overview">Skip to dashboard</a>
+  <div class="shell">
+    <header class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="Sleep Studio home"><span class="brand-mark" aria-hidden="true">◒</span><span>Sleep Studio<small>Porcelain edition</small></span></a>
+      <nav class="main-nav" aria-label="Dashboard sections">
+      <a href="#overview" class="nav-item active"><span aria-hidden="true">◷</span> Sleep</a>
+      <a href="#history" class="nav-item"><span>▤</span> History</a>
+      <a href="#watch" class="nav-item"><span>♡</span> Watch metrics</a>
+      <button class="nav-item" id="customizeNav"><span aria-hidden="true">⚙</span> Settings</button></nav>
+      <a class="sidebar-bottom" href="#integration"><span class="privacy-dot"></span> Local on this Mac</a>
+    </header>
+    <main id="overview" tabindex="-1">
+      <header class="topbar"><div><div class="page-meta"><span class="privacy-dot"></span><span id="sleepDataMode">Loading local history</span></div><h1>Sleep overview</h1><p>Recorded nights and the context behind them.</p></div><div class="header-actions"><button class="button secondary" id="customizeBtn">Settings</button><label class="button primary import-label" for="importFile">Import Health export</label><input id="importFile" type="file" accept=".zip,.xml" class="visually-hidden"></div></header>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <section id="demoBanner" class="demo-banner"><span class="banner-icon">✧</span><div><strong>Synthetic sleep history</strong><p>Sleep overview charts use synthetic fixtures. Import your Apple Health export to see your sleep history. The Watch panel has its own data-mode badge.</p></div><span class="pill demo-pill">Demo data</span></section>
+      <section class="toolbar" aria-label="History filters"><div class="range-controls" role="group" aria-label="Sleep period"><button class="range-button" data-range="7" aria-pressed="false">7 days</button><button class="range-button" data-range="30" aria-pressed="false">30 days</button><button class="range-button selected" data-range="all" aria-pressed="true">All history</button></div><div class="date-controls"><label>From <input id="startDate" type="date"></label><span>—</span><label>To <input id="endDate" type="date"></label></div><div class="scope-label"><strong id="periodLabel">All recorded nights</strong><span id="scopeLabel"></span></div></section>
+      <div class="summary-workspace">
+      <section id="healthOnion" class="porcelain-onion" data-selected="sessions" aria-labelledby="onionMapTitle">
+        <div class="onion-geometry">
+          <header class="onion-map-heading"><h2 id="onionMapTitle">Inside your local view</h2><p>Five layers connect recorded evidence to its context and controls.</p></header>
+          <div id="onionViewport" class="onion-viewport">
+            <svg id="onionFallback" class="onion-fallback" viewBox="0 0 520 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="onionSvgTitle onionSvgDesc">
+              <title id="onionSvgTitle">Five nested application layers</title><desc id="onionSvgDesc">Cutaway layers from sessions at the center to the local boundary outside. Use the layer buttons to inspect or open each view. Depth is fixed and does not describe a health score.</desc>
+              <g class="onion-svg-shells" transform="translate(247 168) rotate(-16)">
+                <path data-onion-shell="boundary" d="M-158 -54 A166 104 0 1 0 158 -54 L127 -43 A134 84 0 1 1 -127 -43Z" fill="#dce4fa" stroke="#7488bb"/>
+                <path data-onion-shell="preferences" d="M-127 -43 A134 84 0 1 0 127 -43 L96 -33 A101 64 0 1 1 -96 -33Z" fill="#2845b7" stroke="#192c83"/>
+                <path data-onion-shell="context" d="M-96 -33 A101 64 0 1 0 96 -33 L66 -23 A70 44 0 1 1 -66 -23Z" fill="#b8c9f0" stroke="#7488bb"/>
+                <path data-onion-shell="measurements" d="M-66 -23 A70 44 0 1 0 66 -23 L35 -12 A37 24 0 1 1 -35 -12Z" fill="#ffffff" stroke="#7488bb"/>
+                <path data-onion-shell="sessions" d="M-35 -12 A37 24 0 1 0 35 -12 L20 -7 A21 13 0 1 1 -20 -7Z" fill="#d1eb54" stroke="#72862b" data-selected="true"/>
+              </g>
+              <g class="onion-svg-guide" fill="none" stroke="#7488bb"><path d="M92 266H414"/><path d="M92 261V271M414 261V271"/></g>
+              <text x="253" y="295" text-anchor="middle" fill="#56617d" font-family="Avenir Next, sans-serif" font-size="12">Fixed depth · app navigation</text>
+            </svg>
+            <canvas id="onionCanvas" hidden aria-hidden="true"></canvas>
+          </div>
+          <div class="onion-view-controls" role="group" aria-label="Layer view controls"><button id="onionSeparate" type="button" aria-pressed="false">Separate layers</button><button id="onionTurn" type="button">Turn view</button><button id="onionMotion" type="button" aria-pressed="false" disabled>Static view</button></div>
+          <p class="onion-legend">Select a shell or a named layer. The order runs from sessions to the local boundary. Fixed depth maps app navigation, not a medical hierarchy or biological cause.</p>
+        </div>
+        <div class="onion-evidence-sheet">
+          <div id="onionLayers" class="onion-layers" role="group" aria-label="Application layers, inner to outer">
+            <button type="button" data-onion-layer="sessions" aria-pressed="true"><i aria-hidden="true"></i><span>Sessions</span><small>Recorded nights</small></button>
+            <button type="button" data-onion-layer="measurements" aria-pressed="false"><i aria-hidden="true"></i><span>Measurements</span><small>Sleep and Watch</small></button>
+            <button type="button" data-onion-layer="context" aria-pressed="false"><i aria-hidden="true"></i><span>Context</span><small>Source and visibility</small></button>
+            <button type="button" data-onion-layer="preferences" aria-pressed="false"><i aria-hidden="true"></i><span>Preferences</span><small>Applied controls</small></button>
+            <button type="button" data-onion-layer="boundary" aria-pressed="false"><i aria-hidden="true"></i><span>Local boundary</span><small>Storage and import</small></button>
+          </div>
+          <div class="onion-selection"><h3 id="onionTitle">Sessions</h3><p id="onionSummary">Current recorded sleep summaries appear here when the local view is ready.</p><p id="onionRelation">Sessions feed the displayed sleep summaries.</p><button id="onionOpen" class="button primary" type="button">Open sleep history</button></div>
+          <p id="onionSelectionStatus" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </section>
+      <section class="metrics" aria-label="Sleep summary">
+        <article class="metric" data-widget="duration"><div class="metric-top">Recorded sleep <span>◷</span></div><div class="metric-value" id="avgDuration">—</div><p id="durationCaption">Average per included session</p><div class="metric-foot" id="targetCaption"></div></article>
+        <article class="metric" data-widget="consistency"><div class="metric-top">Bedtime consistency <span>◐</span></div><div class="metric-value" id="bedtimeSpread">—</div><p>Local-clock bedtime spread</p><div class="metric-foot" id="bedtimeCaption"></div></article>
+        <article class="metric" data-widget="stages"><div class="metric-top">Estimated stages <span>▥</span></div><div class="stage-mini" id="stageMini"></div><p id="stageCaption">Recorded deep · core · REM</p><div class="metric-foot" id="stageCoverage">Watch estimates; gaps stay unknown</div></article>
+        <article class="metric" data-widget="gaps"><div class="metric-top">Recording context <span>◇</span></div><div class="metric-value" id="gapValue">—</div><p>Unclassified within included spans</p><div class="metric-foot" id="excludedCaption"></div></article>
+      </section>
+
+      </div>
+      <section class="panel trend-panel" data-widget="duration"><div class="panel-heading"><div><h2>Recorded sleep over time</h2><p>Each column is a session. Missing nights and excluded sessions remain visible.</p></div><span id="trendTarget" class="subtle-pill"></span></div><div class="legend"><span><i class="deep"></i> Deep</span><span><i class="core"></i> Core</span><span><i class="rem"></i> REM</span><span><i class="unspecified"></i> Unspecified sleep</span><span><i class="excluded"></i> Excluded</span></div><div id="trendChart" class="trend-chart"></div><p class="chart-note">Stage colors describe recorded estimates. No sleep is inferred for blank dates or gaps.</p></section>
+      <div class="lower-grid"><section class="panel history-panel" id="history"><div class="panel-heading"><div><h2>Sleep history</h2></div><span id="historyCount" class="subtle-pill"></span></div><div class="history-scroll"><table><thead><tr><th scope="col">Night ending</th><th scope="col">Recorded sleep</th><th scope="col">Local bedtime</th><th scope="col">Context</th></tr></thead><tbody id="historyRows"></tbody></table></div><div id="historyPaging" class="history-paging"></div></section>
+      <section class="panel detail-panel" id="detailPanel" aria-label="Selected night"><div id="nightDetail"></div></section></div>
+      <section class="panel watch-panel" id="watch" aria-labelledby="watchTitle">
+        <div class="panel-heading"><div><span class="eyebrow">Apple Watch</span><h2 id="watchTitle">Daily Watch metrics</h2><p>Sleep, heart, activity and respiratory measurements, with their source and read visibility.</p></div><span id="watchMode" class="subtle-pill">No Watch data</span></div>
+        <div class="watch-content">
+          <p id="watchSync" role="status" aria-live="polite">Loading local synchronization state…</p>
+          <p class="watch-privacy">Phone connection is not configured. Upload destination is disabled. Background delivery can be delayed until the phone is unlocked; precise waking time is not guaranteed.</p>
+          <div class="watch-controls"><label>Daily grouping timezone <input id="watchTimezone" value="UTC" maxlength="100" aria-describedby="watchTimezoneHint"></label><button id="watchRefresh" type="button" class="button secondary">Refresh local view</button><button id="watchRetry" type="button" class="button secondary">Request local retry</button><label class="button secondary import-label" for="watchFile">Import companion JSON</label><input id="watchFile" type="file" accept=".json" class="visually-hidden"></div>
+          <p id="watchTimezoneHint" class="chart-note">Use an IANA timezone such as Europe/Prague. Dates follow local calendar days; durations use elapsed UTC time.</p>
+          <div id="watchNotice" role="status" aria-live="polite"></div>
+          <div id="watchSleep" class="watch-sleep"></div>
+          <p id="watchCoverage" class="watch-privacy"></p>
+          <section class="watch-trend-panel" aria-labelledby="watchTrendTitle">
+            <div class="watch-trend-heading"><div><h3 id="watchTrendTitle">Recorded measurements over time</h3><p id="watchTrendDescription">Choose one metric and one source. Missing days remain blank.</p></div><div class="watch-trend-controls"><label>Metric<select id="watchTrendType" aria-describedby="watchTrendDescription"></select></label><label>Source<select id="watchTrendSource" aria-describedby="watchTrendDescription"></select></label></div></div>
+            <div id="watchTrend" class="watch-trend" aria-live="polite"><p class="empty-state">No Watch measurements yet. Import a companion batch to see a source-specific trend.</p></div>
+          </section>
+          <div class="watch-table-scroll"><table><caption>Visible daily measurements, separately for each source</caption><thead><tr><th scope="col">Day</th><th scope="col">Metric</th><th scope="col">Recorded value</th><th scope="col">Source</th><th scope="col">Samples</th></tr></thead><tbody id="watchRows"></tbody></table></div>
+          <p class="watch-privacy">Watch sleep stages are estimates. HRV uses SDNN. Wrist temperature is not core body temperature. Missing values are unknown. Laboratory biomarkers require a separate lab source and are not measured by the Watch.</p>
+          <details><summary>Available metric types and read state</summary><div id="watchCatalog"></div></details>
+        </div>
+      </section>
+      <section class="panel integration" id="integration"><div><h2>Your data stays here</h2><p>On your iPhone: <strong>Health → Summary → profile → Export All Health Data</strong>. AirDrop the ZIP to this Mac, then choose “Import Health export.” The server reads sleep records only and discards its temporary export copy.</p><p id="syncStatus" role="status"></p><p>Native macOS HealthKit cannot read Health data. This version uses manual exports; it does not sync automatically.</p></div><div class="integration-links"><a href="https://support.apple.com/en-gb/guide/iphone/iph5ede58c3d/27/ios/27" target="_blank" rel="noreferrer">Apple’s export instructions ↗</a><a href="https://developer.apple.com/documentation/HealthKit/HKHealthStore/isHealthDataAvailable%28%29" target="_blank" rel="noreferrer">HealthKit availability ↗</a><span>ZIP / XML · 256 MiB file limit<br>512 MiB expanded XML · no uploads to third parties</span></div></section>
+      <footer>Sleep Studio · Local prototype<span>Source-aware totals. Human context. No diagnoses.</span></footer>
+    </main>
+  </div>
+  <dialog id="customizeDialog" class="t-modal" aria-labelledby="customizeTitle"><form id="customizeForm"><div class="dialog-heading"><div><h2 id="customizeTitle">Dashboard settings</h2></div><button type="button" class="icon-button" id="closeCustomize" aria-label="Close customization">×</button></div><p class="dialog-intro">Preferences and notes are saved privately on this Mac.</p><div class="settings-grid"><label>Primary wearer<input id="primaryOwnerInput" type="text" maxlength="1000" required placeholder="You"></label><label>Personal sleep target (hours)<input name="target" id="targetInput" type="number" min="1" max="16" step="0.25" required></label><label>Group sessions across gaps up to<select id="groupingInput"><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option><option value="6">6 hours</option></select></label><label>Clock for bedtime comparisons<select id="timezoneMode"><option value="recorded">Recorded local timezone / offset</option><option value="fixed">One chosen timezone</option></select></label><label>Chosen timezone<input id="timezoneInput" placeholder="UTC" required list="timezones"><datalist id="timezones"><option value="Asia/Tokyo"><option value="Asia/Bangkok"><option value="Europe/Prague"><option value="UTC"><option value="America/New_York"><option value="America/Los_Angeles"></datalist></label></div><fieldset class="widget-controls"><legend>Overview measurements</legend><label><input type="checkbox" data-card="duration"> Duration + trend</label><label><input type="checkbox" data-card="consistency"> Bedtime</label><label><input type="checkbox" data-card="stages"> Stages</label><label><input type="checkbox" data-card="gaps"> Recording context</label></fieldset><div class="source-settings"><h3>Source priority</h3><p>The first source wins when recordings overlap. Specific stages supersede unspecified sleep within one source; in-bed time never counts as sleep.</p><div id="sourceOrder"></div></div><div class="dialog-actions"><div><span id="settingsProgress" role="status"></span><span id="settingsError" role="alert"></span></div><button class="button primary" id="saveCustomize" type="submit">Save preferences</button></div></form></dialog>
+</body>
+</html>

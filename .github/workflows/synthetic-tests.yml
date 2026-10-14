@@ -1,0 +1,31 @@
+name: Synthetic tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Python synthetic import and localhost API tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: JavaScript synthetic flow and geometry tests
+        run: node --test tests/*.test.cjs tests/*.test.mjs
+  native-core:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Portable native core synthetic tests
+        run: sh ios-companion/scripts/test-synthetic.sh
